@@ -1,10 +1,11 @@
 (function() {
     
     function Calendar(element) {
-        const days = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+        const days = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+        const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
         var render = function() {
             var now = moment();    
-            element.innerHTML = `${days[now.day()]}, ${now.format('DD.MM.YYYY')}`;
+            element.innerHTML = `${days[now.day()]}, ${now.format('DD')}. ${months[now.month()]} ${now.format('YYYY')}`;
 
             window.setTimeout(render, moment().add(1, 'd').startOf('day').diff(now));
         }
@@ -53,14 +54,34 @@
         }
         render();
     }
-    
-    for (var el of document.querySelectorAll('*[data-view=calendar]')) {
-        new Calendar(el);
-    }    
-    for (var el of document.querySelectorAll('*[data-view=clock]')) {
-        new Clock(el);
+   
+    function Countdown(element) {
+	var end = moment(element.dataset.countdownUntil || element.textContent);
+	var render = function() {
+		var now = moment();
+		if (now.isSame(end, 'days')) {
+			element.textContent = 'Heute';
+		} else if (now.isAfter(end)) {
+			element.textContent = '';
+			return;
+		} else {
+			var days = end.diff(now, 'd') + 1;
+			while (now.isBefore(end)) {
+				if (now.day() < 1 || now.day() > 5) {
+					days--;
+				}
+				now = now.add(1, 'day');
+			}
+			element.textContent = `noch ${days} Arbeitstag(e)`;
+		}
+            	window.setTimeout(render, moment().add(1, 'd').startOf('day').diff(now));
+	}
+    	render();
     }
 
+    Array.from(document.querySelectorAll('*[data-view=calendar]')).forEach(el => new Calendar(el));
+    Array.from(document.querySelectorAll('*[data-view=clock]')).forEach(el => new Clock(el));
     Array.from(document.querySelectorAll('*[data-view=event]')).forEach(el => new Event(el));
+    Array.from(document.querySelectorAll('*[data-view=countdown]')).forEach(el => new Countdown(el));
 
 })();
